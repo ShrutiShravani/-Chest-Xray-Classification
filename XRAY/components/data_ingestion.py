@@ -1,27 +1,54 @@
+import sys
+
+from XRAY.cloud_storage.s3_operation import S3Operation
+from XRAY.constant.training_pipeline import *
+from XRAY.entity.artifact_entity import DataIngestionArtifact
+from XRAY.entity.config_entity import DataIngestionConfig
 from XRAY.exception import XrayException
 from XRAY.logger import logging
-import os,sys
-from XRAY.entity.artifact_entity import DataIngestionArtifact
-from XRAY.entity.config_entity import DataIngestionconfig
+
 
 class DataIngestion:
-    def __init__(self,data_ingestion_config:DataIngestionconfig):
-        self.data_ingestion_config= data_ingestion_config
+    def __init__(self, data_ingestion_config: DataIngestionConfig):
+        self.data_ingestion_config = data_ingestion_config
 
-        #GET DATA FROM S3 BUCKET
-    
-    
-    
-    def get_data_from_s3(self)->None:
+        self.s3 = S3Operation()
+
+    def get_data_from_s3(self) -> None:
         try:
-            pass
-        except XrayException as e:
-            raise XrayException(e,sys)
-    
+            logging.info("Entered the get_data_from_s3 method of Data ingestion class")
+
+            self.s3.sync_folder_from_s3(
+                folder=self.data_ingestion_config.data_path,
+                bucket_name=self.data_ingestion_config.bucket_name,
+                bucket_folder_name=self.data_ingestion_config.s3_data_folder,
+            )
+
+            logging.info("Exited the get_data_from_s3 method of Data ingestion class")
+
+        except Exception as e:
+            raise XrayException(e, sys)
+        
+        
 
     def initiate_data_ingestion(self) -> DataIngestionArtifact:
+        logging.info(
+            "Entered the initiate_data_ingestion method of Data ingestion class"
+        )
+
         try:
-            pass
-    
-        except XrayException as e:
-            raise XrayException(e,sys)
+            self.get_data_from_s3()
+
+            data_ingestion_artifact: DataIngestionArtifact = DataIngestionArtifact(
+                train_file_path=self.data_ingestion_config.train_data_path,
+                test_file_path=self.data_ingestion_config.test_data_path,
+            )
+
+            logging.info(
+                "Exited the initiate_data_ingestion method of Data ingestion class"
+            )
+
+            return data_ingestion_artifact
+
+        except Exception as e:
+            raise XrayException(e, sys)
